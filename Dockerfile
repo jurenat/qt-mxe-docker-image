@@ -9,6 +9,8 @@ ARG QT_ARCHIVE="qt-everywhere-src-${QT_VERSION}"
 ARG QT_ARCHIVE_NAME="${QT_ARCHIVE}.tar.xz"
 ARG QT_URL="https://download.qt.io/official_releases/qt/${QT_MAJMIN}/${QT_VERSION}/single/${QT_ARCHIVE_NAME}"
 ARG QT_SHA256="c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa"
+ARG QTIF_VERSION="3.2.2"
+ARG QTIF_NAME="installer-framework"
 
 ARG QT_ESSENTIALS="build-essential perl python git"
 ARG QT_COMMON="libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxfixes-dev libxi-dev libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libxkbcommon-x11-dev"
@@ -35,8 +37,8 @@ RUN apt update && apt full-upgrade -y && apt install -y wget libyaml-cpp-dev lib
 # RUN locale-gen en_US.UTF-8 && dpkg-reconfigure locales
    
 RUN echo "${QT_SHA256}  ${QT_ARCHIVE_NAME}" > sha.txt && wget ${QT_URL} && sha256sum -c sha.txt && tar xf ${QT_ARCHIVE_NAME} && cd ${QT_ARCHIVE} && ./configure -opensource -confirm-license && make -j$(nproc) && make install && cd / && rm -rf ${QT_ARCHIVE} && rm ${QT_ARCHIVE_NAME} sha.txt
+RUN git clone git://code.qt.io/${QTIF_NAME}/${QTIF_NAME}.git -b ${QTIF_VERSION} && cd ${QTIF_NAME} && /usr/local/Qt-${QT_VERSION}/bin/qmake && make -j$(nproc) && make install && cd .. && rm -rf ${QTIF_NAME}
 
 RUN git clone https://github.com/mxe/mxe.git && cd mxe && make MXE_TARGETS='x86_64-w64-mingw32.shared' -j$(nproc) JOBS=$(nproc) lua yaml-cpp qt5 && make clean-junk && make clean-pkg && rm /mxe/pkg/* && rm -r /mxe/.ccache && if [ -d "/mxe/log" ]; then rm -rf /mxe/log/*; fi
 
 # RUN locale-gen en_US.UTF-8 && dpkg-reconfigure locales
-
